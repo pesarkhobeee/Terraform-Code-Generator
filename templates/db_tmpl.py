@@ -1,13 +1,10 @@
 {%- for i in identifiers -%} 
 resource "aws_db_instance" "{{ i.identifier }}" {
-  identifier        = "{{ i.identifier }}"
-  name              = "{{ i.name }}"
-  username          = "{{ i.username }}"
-  password          = "{{ i.password }}"
-  engine            = "{{ i.engine }}"
-  engine_version    = "{{ i.engine_version }}"
-  allocated_storage = "{{ i.allocated_storage }}"
-  instance_class    = "{{ i.instance_class }}"
+  {% for key, value in i.items() %}
+   {% if key != 'team' %}
+  {{ key }} = "{{ value }}"
+   {%endif %}
+  {% endfor %}
 }
 
 output "{{ i.identifier }}-endpoint" {
