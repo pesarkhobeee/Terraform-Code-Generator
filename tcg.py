@@ -33,7 +33,17 @@ def yaml_generator(args):
 
 def main(args):
     try:
-        print(yaml_generator(args))
+        result = yaml_generator(args)
+        if result is not None:
+            destinationPath = os.path.join(
+                    args.Destination, args.output_file_name)
+            if os.path.exists(destinationPath):
+                raise Exception("you cannot overwrite an existing file: {}".format(destinationPath))
+            else:
+                with open(destinationPath, 'w') as filehandle:
+                    filehandle.write(result)
+        else:
+            raise Exception("The generated YAML file is empty!")
     except Exception as e:
         logging.critical("Fatal error hapend: {}".format(e))
         sys.exit(1)
@@ -48,6 +58,10 @@ if __name__ == "__main__":
     parser.add_argument(
         'Destination', type=str,
         help='The output directory for the generated .tf file'
+    )
+    parser.add_argument(
+        '--output-file-name', type=str, default="main.tf",
+        help='The file name which we will use to save the output'
     )
     parser.add_argument(
         '--log-level', type=str, default="WARNING",
