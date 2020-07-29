@@ -6,6 +6,7 @@ import sys
 import os
 import yaml
 from jinja2 import Environment, FileSystemLoader
+from subprocess import check_output, CalledProcessError, STDOUT
 
 
 def yaml_generator(args):
@@ -31,7 +32,29 @@ def yaml_generator(args):
     return(template.render(identifiers=config_data))
 
 
+def getstatusoutput(cmd):
+    """
+    Run the desire command in the command line and
+    get the result and also return code from it.
+    """
+    try:
+        data = check_output(
+                cmd, shell=True, universal_newlines=True, stderr=STDOUT)
+        status = 0
+    except CalledProcessError as ex:
+        data = ex.output
+        status = ex.returncode
+    if data[-1:] == '\n':
+        data = data[:-1]
+    return status, data
+
+
 def main(args):
+    """
+    This main function will call code generator,
+    Then if it works it will try to run a health check on it
+    and finally save the output to the desire location
+    """
     try:
         result = yaml_generator(args)
         if result is not None:
@@ -44,6 +67,11 @@ def main(args):
                     filehandle.write(result)
         else:
             raise Exception("The generated YAML file is empty!")
+        # lets check the health of the result file
+        cmdReturnCode, cmdResult = getstatusoutput("terraform fmt " + destinationPath)
+        if cmdReturnCode != 0:
+            os.remove(destinationPath)
+            raise Exception("There is a formating problem inside of the result file: {}".format(cmdResult))
     except Exception as e:
         logging.critical("Fatal error hapend: {}".format(e))
         sys.exit(1)
