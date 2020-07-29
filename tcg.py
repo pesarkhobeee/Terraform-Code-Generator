@@ -4,6 +4,8 @@ import argparse
 import logging
 import sys
 import os
+import yaml
+from jinja2 import Environment, FileSystemLoader
 
 
 def yaml_generator(args):
@@ -19,7 +21,14 @@ def yaml_generator(args):
     if not os.path.exists(args.Destination):
         raise Exception('The destination folder doesn\'t exist: {}'.format(args.Destination))
 
-    return "It is working!"
+    config_data = yaml.load(open(args.Source), Loader=yaml.FullLoader)
+    logging.info(config_data)
+    env = Environment(
+            loader = FileSystemLoader('./templates'),
+            trim_blocks=True,
+            lstrip_blocks=True)
+    template = env.get_template('db_tmpl.py')
+    return(template.render(identifiers=config_data))
 
 
 def main(args):
